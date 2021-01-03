@@ -3,4 +3,5 @@ vendor/*
 .DS_Store
 .sync
 .config
+log/*
 

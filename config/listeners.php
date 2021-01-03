@@ -1,0 +1,4 @@
+<?php 
+$_CONFIG["listeners"] = [
+            
+];
