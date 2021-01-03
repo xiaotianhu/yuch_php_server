@@ -1,0 +1,6 @@
+runtime/*
+vendor/*
+.DS_Store
+.sync
+.config
+
