@@ -1,4 +1,5 @@
 <?php 
-$_CONFIG["listeners"] = [
-            
+return 
+[
+    module\event\NewClientEvent::class => module\listener\NewClientListener::class,
 ];

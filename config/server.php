@@ -1,6 +1,6 @@
 <?php 
-
-$_CONFIG["server"] = [
+return 
+[
     "host" => "0.0.0.0",
     "port" => "9999",
 ];

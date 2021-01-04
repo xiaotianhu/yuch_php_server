@@ -5,10 +5,12 @@ use module\exception\ServerException;
 use Doctrine\Common\EventManager;
 
 class Server{
-    private $socket = null;
+    public array $configs   = [];
+    private $socket         = null;
     private ?array $clients = [];
-    private ?Dispatcher $clientDispatcher = null;
-    private ?EventManager $eventDispatcher = null;
+
+    private ?Dispatcher $clientDispatcher  = null;
+    public  ?EventManager $eventDispatcher = null;
 
     public function __construct()
     {
@@ -35,9 +37,22 @@ class Server{
 
     private function init()
     {
-        
+        $this->loadConfigs();
+        $this->registEventListeners();    
+        event(new \module\event\NewClientEvent(null));
     }
 
+    private function loadConfigs()
+    {
+        $files = scandir(BASE_DIR."/config");
+        foreach($files as $f){
+            if($f == "." || $f == "..") continue;
+            $file = substr($f, 0, -4);
+            $c = require(BASE_DIR."/config/".$f);
+            if(empty($c) || !is_array($c)) continue;
+            $this->configs[$file] = $c;
+        }
+    }
 
     private function listen()
     {
@@ -55,5 +70,14 @@ class Server{
         $this->socket = $socket;
     }
 
-
+    private function registEventListeners()
+    {
+        $listeners = config("listeners");
+        if(empty($listeners)) return;
+        foreach($listeners as $event => $listener){
+            if(!class_exists($event)) throw new ServerException("Event: {$event} not exist, registEventListener failed");
+            if(!class_exists($listener)) throw new ServerException("Listener: {$listener} not exist, registEventListener failed");
+            $this->eventDispatcher->addEventListener($event, (new $listener()));
+        }
+    }
 }

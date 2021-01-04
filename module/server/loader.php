@@ -1,6 +1,7 @@
 <?php 
 declare(strict_types=1);
 
+if(!function_exists("loadDir")){
     function loadDir(string $dir, bool $recursive=false)
     {
         if(!is_dir($dir)) throw new \Exception($dir."not exist.");
@@ -16,4 +17,5 @@ declare(strict_types=1);
             }
         }
     }
+}
 
