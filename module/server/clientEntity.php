@@ -4,6 +4,9 @@ namespace module\server;
 
 class ClientEntity {
     private $socket = null;
+    private ?string $sendBuffer = null;
+    private ?string $readBuffer = null;
+    private ?int $lastHeartbeat = null;
 
     public function __construct($socket)
     {
