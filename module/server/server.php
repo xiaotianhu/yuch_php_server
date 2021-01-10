@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace module\server;
 use module\exception\ServerException;
+use module\exception\ClientException;
 use Doctrine\Common\EventManager;
 
 class Server{
@@ -20,18 +21,29 @@ class Server{
 
     public function start()
     {
-        $this->init();
-        $this->listen();
-        while(true){
-            $sock = socket_accept($this->socket);
-            $pid = pcntl_fork();
-            if($pid < 0) die("fork failed.");
-            if($pid == 0){
-                $client = new ClientEntity($sock);
-                $this[$sock] = $client;
-                $this->clientDispatcher->handle($client);
+        try{
+            $this->init();
+            $this->listen();
+            while(true){
+                $sock = socket_accept($this->socket);
+                l("wait for new connection.");
+                $pid = pcntl_fork();
+                if($pid < 0) die("fork failed.");
+                if($pid == 0){
+                    try{
+                        $client = new ClientEntity($sock);
+                        $this[$sock] = $client;
+                        $this->clientDispatcher->handle($client);
+                    }catch(ClientException $e){
+                        l($e);
+                        exit();    
+                    }
+                }
+                sleep(1); 
             }
-            sleep(1); 
+        }catch(\Exception $e){
+            l($e);
+            exit();
         }
     } 
 
@@ -39,7 +51,6 @@ class Server{
     {
         $this->loadConfigs();
         $this->registEventListeners();    
-        event(new \module\event\NewClientEvent(null));
     }
 
     private function loadConfigs()
@@ -79,5 +90,10 @@ class Server{
             if(!class_exists($listener)) throw new ServerException("Listener: {$listener} not exist, registEventListener failed");
             $this->eventDispatcher->addEventListener($event, (new $listener()));
         }
+    }
+
+    private function registSignalHandler()
+    {
+
     }
 }

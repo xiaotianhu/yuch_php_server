@@ -7,14 +7,11 @@
 use module\server\Server;
 use module\exception\ServerException;
 
+define("BASE_DIR", realpath(dirname(__FILE__)));
 (function(){
-    $dir = dirname(__FILE__);
-    include($dir."/vendor/autoload.php");
-    include($dir."/module/server/loader.php");
-    loadDir($dir."/module", true);
-    if(!is_file($dir."/vendor/autoload.php")){
-        l("you should run: 'composer install' before start the server.");
-        exit();
+    include(BASE_DIR."/vendor/autoload.php");
+    if(!is_file(BASE_DIR."/vendor/autoload.php")){
+        exit ("you should run: 'composer install' before start the server.");
     }
 })();
 

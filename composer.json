@@ -1,6 +1,23 @@
 {
+    "name": "xiaotianhu/yuch_php_server",
+    "type": "project",
+    "description": "Server for BlackBerry's yuch email client.",
+    "keywords": [
+        "yuch",
+        "blackberry"
+    ],
+    "license": "MIT",
+
     "require": {
         "php-imap/php-imap": "^4.1",
         "doctrine/event-manager": "^1.1"
+    },
+    "autoload": {
+        "files": [
+            "module/server/helper.php"
+        ],
+        "psr-4": {
+            "module\\": "module/"
+        }
     }
 }

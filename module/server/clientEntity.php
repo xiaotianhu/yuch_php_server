@@ -3,9 +3,16 @@ declare(strict_types=1);
 namespace module\server;
 
 class ClientEntity {
+    use SendReceiveTrait;
+    
+    /*
+     * @var Resource of socket connection
+     */
     private $socket = null;
-    private ?string $sendBuffer = null;
-    private ?string $readBuffer = null;
+    
+    /*
+     * @var last heartbeat timestamp
+     */
     private ?int $lastHeartbeat = null;
 
     public function __construct($socket)
@@ -16,6 +23,15 @@ class ClientEntity {
         $this->socket = $socket;
         l("A new client has connected:".$this->getIp);
         return $this;
+    }
+
+    public function validate()
+    {
+        $realPassword = config("server.password");
+        $this->receivePackage();
+        $head = $this->slice($this->package,1);
+        l("real password:".$realPassword);
+        var_dump($head);die(); 
     }
 
     public function getIp():?string
