@@ -20,12 +20,12 @@ function config(string $key, $default = null)
 {
     if(empty($key)) return null;
     $config = app()->configs;
-    $r = null;
+    $r = $config;
     foreach(explode(".", $key) as $v){
-        if(empty($config[$v])) {
+        if(empty($r[$v])) {
             return $default;
         }
-        $r = $config[$v];
+        $r = $r[$v];
     }
     return !empty($r)? $r : $default;
 }

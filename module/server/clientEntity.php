@@ -2,13 +2,12 @@
 declare(strict_types=1);
 namespace module\server;
 
+use module\exception\ClientException;
 class ClientEntity {
-    use SendReceiveTrait;
-    
-    /*
-     * @var Resource of socket connection
-     */
-    private $socket = null;
+    use DataTrait;
+    const HEAD_CONFIRM   = 2;
+    const HEAD_HEARTBEAT = 7;
+    const HEAD_MAIL      = 1;
     
     /*
      * @var last heartbeat timestamp
@@ -21,17 +20,27 @@ class ClientEntity {
             throw new \Exception("Socket resource is not available.");
         }
         $this->socket = $socket;
-        l("A new client has connected:".$this->getIp);
+        l("A new client has connected:".$this->getIp());
+        $this->validate();
         return $this;
     }
 
     public function validate()
     {
         $realPassword = config("server.password");
-        $this->receivePackage();
-        $head = $this->slice($this->package,1);
+        $package = $this->receivePackage();
+        
+        $head = $package->readByte();
+        if($head != self::HEAD_CONFIRM) throw new ClientException("validation head wrong.");
+        $pwd  = $package->readString();
+        if($pwd != $realPassword) throw new ClientException("password worng.");
         l("real password:".$realPassword);
-        var_dump($head);die(); 
+    }
+
+    public function close()
+    {
+        l("client has closed by server.");
+        socket_close($this->socket);
     }
 
     public function getIp():?string

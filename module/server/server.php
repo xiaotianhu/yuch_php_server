@@ -26,26 +26,39 @@ class Server{
             $this->listen();
             while(true){
                 $sock = socket_accept($this->socket);
-                l("wait for new connection.");
+                if(!$sock){
+                    $this->waitChild();
+                    continue;
+                }
                 $pid = pcntl_fork();
                 if($pid < 0) die("fork failed.");
                 if($pid == 0){
                     try{
                         $client = new ClientEntity($sock);
-                        $this[$sock] = $client;
+                        $sockId = intval($sock);
+                        $this->clients[$sockId] = $client;
                         $this->clientDispatcher->handle($client);
                     }catch(ClientException $e){
+                        $this->closeSocket($sock);
                         l($e);
-                        exit();    
+                        exit();
                     }
+                }else{
+                    l("parent: waiting for children...");
+                    $this->waitChild($pid);
                 }
-                sleep(1); 
             }
         }catch(\Exception $e){
             l($e);
             exit();
         }
     } 
+
+    public function closeSocket($socket)
+    {
+        l("socket $socket has closed.");
+        return socket_close($socket);
+    }
 
     private function init()
     {
@@ -68,8 +81,9 @@ class Server{
     private function listen()
     {
         $host = config("server.host", "0.0.0.0");
-        $port = config("server.port", 9999);
+        $port = intval(config("server.port", 9999));
         $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+        socket_set_nonblock($socket);
         socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
         socket_bind($socket, $host, $port);
         $l = socket_listen($socket, 10);
@@ -96,4 +110,17 @@ class Server{
     {
 
     }
+
+    private function waitChild()
+    {
+        $exit = null;
+        $r = pcntl_wait($exit, WNOHANG);
+        if($r == -1){
+            //nothing.
+        }else{
+            l("child has exited.".$exit);
+        }
+        sleep(1);
+    }
+    
 }

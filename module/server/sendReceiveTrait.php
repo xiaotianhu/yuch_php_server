@@ -4,22 +4,25 @@ namespace module\server;
 use module\exception\ClientException;
 
 trait SendReceiveTrait{
-    private ?array $package = [];
+    private ?array $unhandlePackage = [];
     private ?array $sendBuffer = null;
 
     public function receivePackage()
     {
-        if(!empty($this->package)){
-            return array_unshift($this->package);
+        if(!empty($this->unhandlePackage)){
+            return array_unshift($this->unhandlePackage);
         }
-        $int = $this->parseInt($this->read(4));
+        $intStr = $this->read(4);
+        $int = $this->parseInt($intStr);
         if($int < 0) throw new \Exception("read int err.");
 
         $zipLen = 0;
         $orgLen = 0;
         if($int == 0){
-            $orgLen = $this->parseInt($this->read(4));
-            $zipLen = $this->parseInt($this->read(4));
+            $o = $this->read(4);
+            $orgLen = $this->parseInt($o);
+            $z = $this->read(4);
+            $zipLen = $this->parseInt($z);
         }else{
              $zipLen = $int & 0x0000ffff;
              $orgLen = $int >> 16;
@@ -46,7 +49,7 @@ trait SendReceiveTrait{
         return $data;
     }
 
-    public function slice(array &$arr, $length=false):array
+    public static function slice(array &$arr, $length=false):array
     {
         if(empty($arr) || !is_array($arr)) return [null];
         $newData = array_slice($arr, 0, $length);
@@ -56,15 +59,15 @@ trait SendReceiveTrait{
     }
 
 
-    public function parseInt(&$buffer=null){
+    public function parseInt($buffer=null){
         if(empty($buffer) || count($buffer) != 4){
-            throw new ClientException("err parse Int.");
+            throw new ClientException("err parse Int,empty buf or buf length != 4.");
         }
 
         return $buffer[0] | ($buffer[1] << 8) | ($buffer[2]  << 16) | ($buffer[3] << 24);
     }
 
-    public function parseLong(&$buffer=null){
+    public function parseLong($buffer=null){
         $low  = $this->parseInt($this->slice($buffer, 4));
         $high = $this->parseInt($this->slice($buffer, 4));
         if($low >= 0){
@@ -72,12 +75,10 @@ trait SendReceiveTrait{
         }else{
             return (($high<< 32) | ((($low & 0x7fffffff)) | 0x80000000));
         }
-
     }
 
-    public function parseString(&$buffer){
-        if(empty($buffer)||count($buffer) < 4)
-            return "";
+    public function parseString($buffer){
+        if(empty($buffer)) return "";
         $length = $this->parseInt($this->slice($buffer, 4));
         $strArr = $this->slice($buffer, $length);
         $str = "";
@@ -87,7 +88,7 @@ trait SendReceiveTrait{
         return $str;
     }
 
-    public function parseStringArray(&$buffer){
+    public function parseStringArray($buffer){
         if(empty($buffer)||count($buffer) < 4)
             return "";
         $len = $this->parseInt($this->slice($buffer, 4));
@@ -181,14 +182,14 @@ trait SendReceiveTrait{
             l("parse empty package, return null;\r\n");
             return null;
         }
-        $tlen = $this->parseInt($this->slice($data, 4));
+        $tlen    = $this->parseInt($this->slice($data, 4));
         $package = $this->slice($data, $tlen);
         $tlen += 4;
         while($tlen < $dataLen){
             $ntlen = $this->parseInt($this->slice($data, 4));
             $npackage = $this->slice($data, $ntlen);
             $tlen += 4;
-            $this->unhandelPackage[] = $npackage;
+            $this->unhandlePackage[] = $npackage;
         }
         return $package;
     }
