@@ -35,12 +35,9 @@ class ClientEntity {
         $pwd  = $package->readString();
         if($pwd != $realPassword) throw new ClientException("password worng.");
         l("real password:".$realPassword);
-    }
-
-    public function close()
-    {
-        l("client has closed by server.");
-        socket_close($this->socket);
+        $version = $package->readInt();
+        l("client version: $version ");
+        l($package->readString());
     }
 
     public function getIp():?string

@@ -26,10 +26,11 @@ class Server{
             $this->listen();
             while(true){
                 $sock = socket_accept($this->socket);
-                if(!$sock){
+                if(!$sock) {
                     $this->waitChild();
-                    continue;
+                    continue; 
                 }
+            
                 $pid = pcntl_fork();
                 if($pid < 0) die("fork failed.");
                 if($pid == 0){
@@ -38,14 +39,15 @@ class Server{
                         $sockId = intval($sock);
                         $this->clients[$sockId] = $client;
                         $this->clientDispatcher->handle($client);
+                        l("child ends!!!!");
                     }catch(ClientException $e){
-                        $this->closeSocket($sock);
                         l($e);
+                        $this->closeSocket($sock);
                         exit();
                     }
                 }else{
-                    l("parent: waiting for children...");
-                    $this->waitChild($pid);
+                    l($pid."parent: waiting for children...");
+                    $this->waitChild();
                 }
             }
         }catch(\Exception $e){
@@ -114,13 +116,14 @@ class Server{
     private function waitChild()
     {
         $exit = null;
+        l("waiting child...");
         $r = pcntl_wait($exit, WNOHANG);
-        if($r == -1){
+        if($r <= 0){
             //nothing.
         }else{
-            l("child has exited.".$exit);
+            l("child has exited.".$exit."--$r");
         }
-        sleep(1);
+        sleep(2);
     }
     
 }

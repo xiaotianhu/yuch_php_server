@@ -53,7 +53,9 @@ trait DataTrait{
         for($i=0;$i<$len;$i++){
             if(!$this->socket) throw new ClientException("client socket err.");
             $d = socket_read($this->socket, 1);
-            if(!$d) throw new ClientException("client socket read err.");
+            var_dump($d);
+            if($d === false) continue;
+            //if($d === false) throw new ClientException("client socket read err."); 
             $r = ord($d);
             $data[] = $r;
         }

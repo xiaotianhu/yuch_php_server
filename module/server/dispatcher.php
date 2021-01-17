@@ -9,5 +9,9 @@ class Dispatcher {
     {
 
         //event(new NewClientEvent($client));
+        while(true){
+            sleep(1);
+            echo "ok\r\n";
+        }
     }
 }
