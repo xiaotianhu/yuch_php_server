@@ -8,6 +8,8 @@ class ClientEntity {
     const HEAD_CONFIRM   = 2;
     const HEAD_HEARTBEAT = 7;
     const HEAD_MAIL      = 1;
+
+    const TIMEOUT_SEC = 300;//5minutes timeout if no heartbeat reveived.
     
     /*
      * @var last heartbeat timestamp
@@ -45,5 +47,20 @@ class ClientEntity {
         $ip = null;
         socket_getpeername($this->socket, $ip);
         return $ip;
+    }
+
+    public function updateHeartbeat()
+    {
+        $this->lastHeartbeat = time();
+    }
+
+    /*
+     * Check if last heartbeat is timeouted.Disconnect if timeout.
+     */
+    public function isTimeout():bool
+    {
+        if(!$this->lastHeartbeat) return true;
+        if(time() - $this->lastHeartbeat > self::TIMEOUT_SEC) 
+            throw new ClientException("Client connection timeouted.Disconnecting...");
     }
 }

@@ -24,6 +24,7 @@ class Server{
         try{
             $this->init();
             $this->listen();
+            $this->registSignalHandler();
             while(true){
                 $sock = socket_accept($this->socket);
                 if(!$sock) {
@@ -39,7 +40,7 @@ class Server{
                         $sockId = intval($sock);
                         $this->clients[$sockId] = $client;
                         $this->clientDispatcher->handle($client);
-                        l("child ends!!!!");
+                        l("child ends, exit..!!!!");
                     }catch(ClientException $e){
                         l($e);
                         $this->closeSocket($sock);
@@ -58,7 +59,7 @@ class Server{
 
     public function closeSocket($socket)
     {
-        l("socket $socket has closed.");
+        l("socket $socket closing by server.");
         return socket_close($socket);
     }
 
@@ -85,7 +86,6 @@ class Server{
         $host = config("server.host", "0.0.0.0");
         $port = intval(config("server.port", 9999));
         $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        socket_set_nonblock($socket);
         socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
         socket_bind($socket, $host, $port);
         $l = socket_listen($socket, 10);
@@ -110,7 +110,10 @@ class Server{
 
     private function registSignalHandler()
     {
-
+        pcntl_signal(SIGPIPE, function($sig){
+            l("received sigpipe signal...");
+            var_dump($sig);
+        });
     }
 
     private function waitChild()
@@ -125,5 +128,4 @@ class Server{
         }
         sleep(2);
     }
-    
 }

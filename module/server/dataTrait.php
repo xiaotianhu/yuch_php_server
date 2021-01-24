@@ -19,7 +19,7 @@ trait DataTrait{
         }
 
         $int = $this->parseInt($this->socketRead(4));
-        if($int < 0) throw new \Exception("read int err.");
+        if($int < 0) throw new ClientException("read int err.");
 
         $zipLen = 0;
         $orgLen = 0;
@@ -52,10 +52,11 @@ trait DataTrait{
         $data = [];
         for($i=0;$i<$len;$i++){
             if(!$this->socket) throw new ClientException("client socket err.");
-            $d = socket_read($this->socket, 1);
-            var_dump($d);
-            if($d === false) continue;
-            //if($d === false) throw new ClientException("client socket read err."); 
+            $d = null;
+            $res = socket_recv($this->socket, $d, 1, MSG_WAITALL);
+            if($res === 0) throw new \Exception("connection closed.");
+            if(!$res) return [];
+            
             $r = ord($d);
             $data[] = $r;
         }

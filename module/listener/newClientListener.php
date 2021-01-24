@@ -7,7 +7,7 @@ class NewClientListener extends AbstractListener{
     public function handle($event):void
     {
         l("new client listener on handle.");
-        var_dump($event);die();
+        var_dump($event);
     }
 }
 

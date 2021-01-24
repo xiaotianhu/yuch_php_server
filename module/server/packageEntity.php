@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace module\server;
 
-class packageEntity {
+class PackageEntity {
     use DataTrait;
 
     private ?array $data = [];
