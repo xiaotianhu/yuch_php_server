@@ -4,6 +4,7 @@ namespace module\server;
 
 use module\event\NewClientEvent;
 use module\event\HeartbeatEvent;
+use module\event\NewMailEvent;
 
 class Dispatcher {
     const RECV_SLEEP_TIME =1;//non block sleep interval
@@ -26,7 +27,15 @@ class Dispatcher {
         switch($packageHead){
             case ClientEntity::HEAD_HEARTBEAT:
                 event(new HeartbeatEvent($client, $package));
-               break; 
+                break; 
+            case ClientEntity::HEAD_MAIL:
+                event(new NewMailEvent($client, $package));
+                break;
+            default:
+                l("undefined package head.".$packageHead);
+                var_dump($packageHead);
+                var_dump($package);
+                break;
         }
     }
 }

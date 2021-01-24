@@ -75,7 +75,7 @@ trait DataTrait{
     public function parseInt($buffer=null):int
     {
         if(empty($buffer) || count($buffer) != 4){
-            throw new ClientException("err parse Int,empty buf or buf length != 4.");
+            throw new ClientException("err parse Int,empty buf or buf length != 4.".json_encode($buffer));
         }
 
         $r = $buffer[0] | ($buffer[1] << 8) | ($buffer[2]  << 16) | ($buffer[3] << 24);

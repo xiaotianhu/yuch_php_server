@@ -5,12 +5,14 @@ namespace module\event;
  * trigger when new client has connected.
  */
 use module\server\ClientEntity;
+use module\server\PackageEntity;
 
-class NewClientEvent extends AbstractEvent{
-    public ?ClientEntity $clientEntity = null;
-    
-    public function __construct(?ClientEntity $client)
+class NewMailEvent extends AbstractEvent{
+    public ?ClientEntity $client;
+    public ?PackageEntity $package;
+    public function __construct(?ClientEntity $client, ?PackageEntity $package)
     {
-        $this->clientEntity = $client;
+        $this->client = $client;
+        $this->package = $package;
     }
 }
