@@ -5,7 +5,7 @@ namespace module\server;
 use module\server\ClientEntity;
 use module\server\PackageEntity;
 use module\exception\ClientException;
-class EmailEntity {
+class BbMessageEntity {
     
     private ?ClientEntity $client;
     private ?PackageEntity $package; 

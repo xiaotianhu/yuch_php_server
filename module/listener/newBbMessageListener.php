@@ -2,15 +2,15 @@
 declare(strict_types=1);
 namespace module\listener;
 
-use module\server\EmailEntity;
+use module\server\BbMessageEntity;
 
-class NewMailListener extends AbstractListener{
+class NewBbMessageListener extends AbstractListener{
     
     public function handle($event):void
     {
         $package     = $event->package;
         $client      = $event->client;
-        $emailEntity = new EmailEntity($client, $package);
+        $emailEntity = new BbMessageEntity($client, $package);
         $emailEntity->parseFromPackage();
 
         l("received email....");

@@ -7,7 +7,7 @@ namespace module\event;
 use module\server\ClientEntity;
 use module\server\PackageEntity;
 
-class NewMailEvent extends AbstractEvent{
+class NewBbMessageEvent extends AbstractEvent{
     public ?ClientEntity $client;
     public ?PackageEntity $package;
     public function __construct(?ClientEntity $client, ?PackageEntity $package)

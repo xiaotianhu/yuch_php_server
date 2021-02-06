@@ -3,20 +3,17 @@ declare(strict_types=1);
 namespace module\server;
 use module\exception\ServerException;
 use module\exception\ClientException;
+use module\process\ProcessMessage;
 use Doctrine\Common\EventManager;
 
 class Server{
     public array $configs   = [];
     private $socket         = null;
     private ?array $clients = [];
-
-    private ?Dispatcher $clientDispatcher  = null;
-    public  ?EventManager $eventDispatcher = null;
+    private ?array $container = [];
 
     public function __construct()
     {
-        $this->clientDispatcher = new Dispatcher();
-        $this->eventDispatcher = new EventManager();
     }
 
     public function start()
@@ -63,10 +60,24 @@ class Server{
         return socket_close($socket);
     }
 
+    public function __get(string $name)
+    {
+        if(!empty($this->container[$name])) return $this->container[$name];
+        return null;
+    }
+    public function __set(string $name, $value)
+    {
+        $this->container[$name] = $value;
+    }
+
     private function init()
     {
         $this->loadConfigs();
         $this->registEventListeners();    
+
+        $this->processMessage   = new ProcessMessage();
+        $this->clientDispatcher = new Dispatcher();
+        $this->eventDispatcher  = new EventManager();
     }
 
     private function loadConfigs()
@@ -112,7 +123,6 @@ class Server{
     {
         pcntl_signal(SIGPIPE, function($sig){
             l("received sigpipe signal...");
-            var_dump($sig);
         });
     }
 
