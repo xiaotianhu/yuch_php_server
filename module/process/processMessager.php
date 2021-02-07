@@ -6,13 +6,14 @@ namespace module\process;
  * message queue for communicate between processes
  */
 use module\exception\ServerException;
-class ProcessMessage{
+class ProcessMessager{
     const MSG_TYPE = 1;
     private $_queue = null;
     
     public function __construct()
     {
         if(!$this->_queue){
+            if(!is_file(BASE_DIR.'/runtime/queue')) file_put_contents(BASE_DIR.'/runtime/queue', "");
             $tokId = ftok(BASE_DIR.'/runtime/queue', 'G');
             msg_get_queue($tokId, 0666);
         }

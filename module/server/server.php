@@ -3,7 +3,8 @@ declare(strict_types=1);
 namespace module\server;
 use module\exception\ServerException;
 use module\exception\ClientException;
-use module\process\ProcessMessage;
+use module\process\ProcessMessager;
+use module\channel\ChannelManager;
 use Doctrine\Common\EventManager;
 
 class Server{
@@ -72,12 +73,13 @@ class Server{
 
     private function init()
     {
-        $this->loadConfigs();
-        $this->registEventListeners();    
-
-        $this->processMessage   = new ProcessMessage();
+        $this->processMessager  = new ProcessMessager();
         $this->clientDispatcher = new Dispatcher();
         $this->eventDispatcher  = new EventManager();
+        $this->channelManager   = new ChannelManager();
+
+        $this->loadConfigs();
+        $this->registEventListeners();    
     }
 
     private function loadConfigs()
