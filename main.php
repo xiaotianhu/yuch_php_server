@@ -19,6 +19,10 @@ try{
     $app = (new Server());
     $app->start();
 }catch(ServerException $e){
-    l($e);
+    l($e->getMessage());
+    var_dump($e->getMessage());
+    exit(); 
+}catch(\Throwable $e){
+    var_dump($e->getMessage());
     exit(); 
 }

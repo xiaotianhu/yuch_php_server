@@ -13,10 +13,6 @@ class Server{
     private ?array $clients = [];
     private ?array $container = [];
 
-    public function __construct()
-    {
-    }
-
     public function start()
     {
         try{
@@ -72,12 +68,13 @@ class Server{
 
     private function init()
     {
+        $this->loadConfigs();
+
         $this->processMessager  = new ProcessMessager();
         $this->clientDispatcher = new Dispatcher();
         $this->eventDispatcher  = new EventManager();
         $this->channelManager   = new ChannelManager();
-
-        $this->loadConfigs();
+        
         $this->registEventListeners();    
     }
 

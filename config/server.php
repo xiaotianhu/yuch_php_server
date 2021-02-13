@@ -10,8 +10,9 @@ return
     //username for email service
     "email_username" => getenv("EMAIL_USER"),
     "email_password" => getenv("EMAIL_PASS"),
-    "pop3_host"      => "notice@huiwenliye.com",
-    "pop3_port"      => "993",
+    "pop3_host"      => "pop.exmail.qq.com",
+    "pop3_port"      => "995",
     "smtp_host"      => "smtp.exmail.qq.com",
     "smtp_port"      => "465",
+    "email_encrypt"  => "tls",
 ];

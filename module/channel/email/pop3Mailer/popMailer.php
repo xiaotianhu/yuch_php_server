@@ -7,15 +7,16 @@ use module\channel\email\pop3Mailer\PopException;
 class PopMailer
 {
     private string $hostname = "";
-    private int $port        = 110;
     private string $username = "";
     private string $password = "";
-    private int $timeout     = 5;
     private string $encrypt  = "ssl";
-    private string $state    = "DISCONNECTED";
-    private $connection = 0;     
+    private int $port        = 110;
+    private int $timeout     = 5;
 
-    function __construct(string $host, int $port, string $user, string $password, string $encrypt = "ssl", int $timeout = 5)
+    private string $state    = "DISCONNECTED";
+    private $connection = null;     
+
+    public function __construct(string $host, int $port, string $user, string $password, string $encrypt = "ssl", int $timeout = 5)
     {
         $this->hostname = $host;
         $this->port     = $port;
@@ -24,7 +25,14 @@ class PopMailer
         $this->timeout  = $timeout;
         if($encrypt != 'ssl' && $encrypt != 'tls') throw new popException("encrypt protocol err, must be ssl/tls");
         $this->encrypt = $encrypt;
-        return $this;
+
+    }
+
+    public function reconnect()
+    {
+        $this->close();
+        $this->open();
+        $this->login();
     }
 
     public function open()
@@ -34,25 +42,14 @@ class PopMailer
         $connection = stream_socket_client($conStr, $errNum, $errStr, $this->timeout);
         if(!$connection) throw new PopException($errStr, $errNum);
         $this->connection = $connection;
-        stream_set_blocking($this->connection, true);
+        //stream_set_blocking($this->connection, false);
         $resp = $this->getResp();
-
         if (substr($resp, 0, 3) != "+OK") {
             throw new PopException("resp err.".$resp);
         }
+       
         $this->state = "AUTHORIZATION";
         return $this;
-    }
-
-    private function getResp():?string
-    {
-        $resp = "";
-        while(true){
-            if (feof($this->connection)) return "";
-            $r = fgets($this->connection, 1);
-            if(!empty($r)) $resp .= $r;
-            if($r == "\n") return $resp;
-        }
     }
 
     public function login() 
@@ -61,10 +58,11 @@ class PopMailer
             throw new PopException("state must be AUTHORIZATION, state error...".$this->state);
         }
 
+        l("loging in...");
         if (!$this->command("USER ".$this->username, "+OK")){
             throw new PopException("command USER {$this->username} error.");
         }
-        if (!$this->command("PASS ".$this->password, "+OK")) {
+        if (!$this->command("PASS ". $this->password, "+OK")) {
             throw new PopException("command PASS {$this->password} error.");
         }
         $this->state = "TRANSACTION"; 
@@ -76,10 +74,12 @@ class PopMailer
         if ($this->connection == 0) {
             throw new PopException("no available connection.");
         }
-        if (!fputs($this->connection, "$command\r\n")) {
+        $w = fputs($this->connection, "$command\r\n");
+        if (!$w) {
             throw new PopException("send command: $command failed.");
         } 
 
+        var_dump($command);
         $resp = $this->getResp();
         if(empty($returnOk)) return $resp;
 
@@ -115,7 +115,7 @@ class PopMailer
         if(empty($r)) throw new PopException("command LIST failed.");
 
         $list = [];
-        for($i = 1;$i <= count($r); $i++){
+        for($i = 1;$i < count($r); $i++){
             if($r[$i] == '.') return $list;
 
             $l = explode(" ", $r[$i]);
@@ -153,9 +153,22 @@ class PopMailer
 
     public function close()
     {
-        $this->command("QUIT", "+OK");
-        fclose($this->connection);
+        if($this->connection) {
+            $this->command("QUIT", "+OK");
+            fclose($this->connection);
+        }
         $this->connection = 0;
         $this->state = "DISCONNECTED";
+    }
+
+    private function getResp():?string
+    {
+        $resp = "";
+        while(true){
+            $r = fgets($this->connection);
+            $resp .= $r;
+            if(strlen($resp) >= 2 && substr($resp, -2, 2) == "\r\n") break;
+        }
+        return $resp;
     }
 }
