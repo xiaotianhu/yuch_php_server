@@ -54,7 +54,7 @@ trait DataTrait{
             if(!$this->socket) throw new ClientException("client socket err.");
             $d = null;
             $res = socket_recv($this->socket, $d, 1, MSG_WAITALL);
-            if($res === 0) throw new \Exception("connection closed.");
+            if($res === 0) throw new ClientException("connection closed.");
             if(!$res) return [];
             
             $r = ord($d);

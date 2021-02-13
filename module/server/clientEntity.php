@@ -52,6 +52,7 @@ class ClientEntity {
     public function updateHeartbeat()
     {
         $this->lastHeartbeat = time();
+        l(intval($this->socket)."last heartbeat time:".$this->lastHeartbeat);
     }
 
     /*
@@ -62,5 +63,7 @@ class ClientEntity {
         if(!$this->lastHeartbeat) return true;
         if(time() - $this->lastHeartbeat > self::TIMEOUT_SEC) 
             throw new ClientException("Client connection timeouted.Disconnecting...");
+
+        return true;
     }
 }

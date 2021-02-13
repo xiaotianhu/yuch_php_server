@@ -3,9 +3,11 @@ declare(strict_types=1);
 namespace module\listener;
 
 use module\server\BbMessageEntity;
+use module\channel\ChannelManager;
 
 class NewBbMessageListener extends AbstractListener{
-    
+    private ?ChannelManager $channelManager = null;
+
     public function handle($event):void
     {
         $package     = $event->package;
@@ -14,7 +16,8 @@ class NewBbMessageListener extends AbstractListener{
         $emailEntity->parseFromPackage();
 
         l("received email....");
-        var_dump($emailEntity);
+        $this->channelManager = app()->channelManager;
+        $this->channelManager->sendByChannel($emailEntity);
     }
 }
 

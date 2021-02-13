@@ -13,7 +13,7 @@ class Dispatcher {
     {
         event(new NewClientEvent($client));
         while(true){
-            l("准备收package");
+            l("wait for new package...");
             $package = $client->receivePackage(); 
             $this->onPackage($client, $package);
             $client->isTimeout();

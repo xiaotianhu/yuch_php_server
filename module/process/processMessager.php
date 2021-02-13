@@ -7,7 +7,7 @@ namespace module\process;
  */
 use module\exception\ServerException;
 class ProcessMessager{
-    const MSG_TYPE = 1;
+
     private $_queue = null;
     
     public function __construct()
@@ -15,28 +15,32 @@ class ProcessMessager{
         if(!$this->_queue){
             if(!is_file(BASE_DIR.'/runtime/queue')) file_put_contents(BASE_DIR.'/runtime/queue', "");
             $tokId = ftok(BASE_DIR.'/runtime/queue', 'G');
-            msg_get_queue($tokId, 0666);
+            $this->_queue = msg_get_queue($tokId, 0666);
         }
     }
 
-    public function send(string $message):void
+    public function send(int $type, string $message):void
     {
-        $s = msg_send($this->_queue, self::MSG_TYPE, $message, false);
+        $s = msg_send($this->_queue, $type, $message, false);
         if(!$s) throw new ServerException("send message with ProcessMessageService failed.");
     }
 
-    public function receive():string
+    /*
+     * non-blocking, return null if there is no message. 
+     */
+    public function receive(int $type):?string
     {
         $msg = null;
         $msgType = null;
-        msg_receive($this->_queue, self::MSG_TYPE, $msgType, 65535, $msg, false);
-        return $msg;
+        $rec = msg_receive($this->_queue, $type, $msgType, 65535, $msg, false, MSG_IPC_NOWAIT);
+        if($rec) return $msg;
+
+        return null;
     }
     
     /*
      * nonblock check if the queue has unhandled messages
      * @return bool true:has new messages
-     */
     public function hasMessage():bool
     {
         $stat = msg_stat_queue($this->_queue);
@@ -45,5 +49,5 @@ class ProcessMessager{
 
         return true; 
     }
-
+     */
 }

@@ -7,25 +7,34 @@ use module\server\BbMessageEntity;
 use module\process\ProcessMessager;
 
 class EmailChannel extends BaseChannel {
+    /*
+     * type for message queue
+     */
+    const MESSAGE_TYPE = 1;
     
     private ?ProcessMessager $processMessager = null;
     public function __construct()
     {
         $this->processMessager = app()->processMessager;
-        var_dump($this->processMessager);
     }
 
-    public function daemon():bool
+    public function loop()
     {
-        return true;
+        while(true){
+            $this->checkMessageQueue();
+            sleep(1);
+        }
     }
 
-    public function checkNewMessage():array
+
+    public function checkMessageQueue():void
     {
-        return [];
+        l("email channel: checking message queue...");
+        $msg = $this->processMessager->receive(self::MESSAGE_TYPE);
+        if($msg) var_dump($msg);
     }
 
-    public function send(BbMessageEntity $bbMessageEntity):bool
+    public function sendByChannel(BbMessageEntity $bbMessageEntity):bool
     {
         return true;
     }

@@ -22,7 +22,13 @@ class ChannelManager {
 
     public function sendByChannel(BbMessageEntity $bbMessageEntity)
     {
-
+        l("channelmanager:send by channel....".serialize($bbMessageEntity));
+        $dir = BASE_DIR."/runtime/message/";
+        if(!is_dir($dir)) mkdir($dir);
+        $file = intval(microtime(true)).".json";
+        file_put_contents($dir.$file, serialize($bbMessageEntity));
+        $type = $this->selectChannelType($bbMessageEntity);
+        $this->processMessager->send($type, $dir.$file); 
     }
 
     private function initAllChannel(array $channels)
@@ -32,17 +38,19 @@ class ChannelManager {
             if($pid > 0){
                 $this->channelPids[$channel] = $pid;
             }
-            if($pid ==0){
-                (new $channel())->daemon();
+            if($pid == 0){
+                l("start new channel process:".$channel);
+                (new $channel())->loop();
             }
         }
-        //$exit = null;
-        //pcntl_wait($exit, WNOHANG);
     }
 
-    private function selectChannel(BbMessageEntity $msg)
+    /*
+     * @return type of the channel
+     */
+    private function selectChannelType(BbMessageEntity $msg):int
     {
-
+        return EmailChannel::MESSAGE_TYPE;
     }
 }
     

@@ -49,11 +49,10 @@ class Server{
                     $this->waitChild();
                 }
             }
-        }catch(\Exception $e){
+        }catch(\Throwable $e){
             l($e);
-            exit();
         }
-    } 
+    }
 
     public function closeSocket($socket)
     {
@@ -98,6 +97,7 @@ class Server{
     {
         $host = config("server.host", "0.0.0.0");
         $port = intval(config("server.port", 9999));
+        l("server start listening ".$host."@".$port);
         $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
         socket_bind($socket, $host, $port);
@@ -106,7 +106,6 @@ class Server{
             $err =  socket_strerror(socket_last_error($socket));
             throw new ServerException($err);
         }
-        l("server start listening ".$host."@".$port);
         $this->socket = $socket;
     }
 

@@ -4,8 +4,9 @@ namespace module\server;
 
 use module\server\ClientEntity;
 use module\server\PackageEntity;
-use module\exception\ClientException;
-class BbMessageEntity {
+//use module\exception\ClientException;
+use Serializable;
+class BbMessageEntity implements Serializable {
     
     private ?ClientEntity $client;
     private ?PackageEntity $package; 
@@ -51,5 +52,50 @@ class BbMessageEntity {
         $this->contain       = $p->readString();
         $this->containHtml   = $p->readString();
         $this->attachmentNum = $p->readInt();
+    }
+
+    public function serialize()
+    {
+        $d           = [
+            'version'       => $this->version,
+            'mailIndex'     => $this->mailIndex,
+            'mailFrom'      => $this->mailFrom,
+            'mailReplyTo'   => $this->mailReplyTo,
+            'mailCcTo'      => $this->mailCcTo,
+            'mailBccTo'     => $this->mailBccTo,
+            'mailTo'        => $this->mailTo,
+            'group'         => $this->group,
+            'subject'       => $this->subject,
+            'time'          => $this->time,
+            'flags'         => $this->flags,
+            'xMailName'     => $this->xMailName,
+            'contain'       => $this->contain,
+            'containHtml'   => $this->containHtml,
+            'attachmentNum' => $this->attachmentNum,
+            'attachments'   => $this->attachments, 
+        ];
+        return json_encode($d);
+    }
+
+    public function unserialize($data)
+    {
+        $d                   = json_decode($data, true);
+        $this->version       = $d['version'];
+        $this->mailIndex     = $d['mailIndex'];
+        $this->mailFrom      = $d['mailFrom'];
+        $this->mailReplyTo   = $d['mailReplyTo'];
+        $this->mailCcTo      = $d['mailCcTo'];
+        $this->mailBccTo     = $d['mailBccTo'];
+        $this->mailTo        = $d['mailTo'];
+        $this->group         = $d['group'];
+        $this->subject       = $d['subject'];
+        $this->time          = $d['time'];
+        $this->flags         = $d['flags'];
+        $this->xMailName     = $d['xMailName'];
+        $this->contain       = $d['contain'];
+        $this->containHtml   = $d['containHtml'];
+        $this->attachmentNum = $d['attachmentNum'];
+        $this->attachments   = $d['attachments'];
+        return $this;
     }
 }
