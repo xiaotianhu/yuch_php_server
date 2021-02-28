@@ -2,7 +2,6 @@
 declare(strict_types=1);
 namespace module\channel\email\pop3Mailer;
 
-use module\channel\email\pop3Mailer\PopException;
 
 class PopMailer
 {
@@ -79,7 +78,6 @@ class PopMailer
             throw new PopException("send command: $command failed.");
         } 
 
-        var_dump($command);
         $resp = $this->getResp();
         if(empty($returnOk)) return $resp;
 
@@ -110,21 +108,25 @@ class PopMailer
         if ($this->state != "TRANSACTION") {
             throw new PopException("connection not in TRANSACTION state.");
         }
-        $resp = $this->command("LIST", "+OK");
-        $r = explode("\n", $resp);
-        if(empty($r)) throw new PopException("command LIST failed.");
+        $this->command("LIST", "+OK");
 
         $list = [];
-        for($i = 1;$i < count($r); $i++){
-            if($r[$i] == '.') return $list;
+        $i = 0;
+        while(true){
+            $i += 1;
+            $resp = $this->getResp();
+            if($i >= PHP_INT_MAX) throw new PopException("command LIST failed, error response.");
+            if(!$resp) break;
+            if(trim($resp) == ".") break;
 
-            $l = explode(" ", $r[$i]);
+            $l = explode(" ", $resp);
             if(empty($l) || empty($l[1])) continue;
             $list[] = [
                 'num' => $l[0],
                 'size' => $l[1],
             ]; 
         }
+        return $list;
     }
 
     public function getMail($num = 1, $line = -1):string
@@ -139,7 +141,14 @@ class PopMailer
             $command = "TOP $num $line";
         }
 
-        return $this->command($command, "+OK");
+        $r = $this->command($command, "+OK");
+        while(true){
+            $resp = $this->getResp();
+            $r .= $resp;
+            if(!$resp) break;
+            if(trim($resp) == ".") break;
+        }
+        return $r;
     }
 
     public function delete(int $num)
@@ -165,9 +174,12 @@ class PopMailer
     {
         $resp = "";
         while(true){
-            $r = fgets($this->connection);
+            $r = fgets($this->connection, 100);
+            if($r === false) break;
             $resp .= $r;
-            if(strlen($resp) >= 2 && substr($resp, -2, 2) == "\r\n") break;
+            if(strlen($resp) >= 2 && substr($resp, strlen($resp)-2, 2) == "\r\n") {
+                break;
+            }
         }
         return $resp;
     }

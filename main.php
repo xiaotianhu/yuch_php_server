@@ -19,10 +19,11 @@ try{
     $app = (new Server());
     $app->start();
 }catch(ServerException $e){
+    echo "ServerException Catched:";
     l($e->getMessage());
-    var_dump($e->getMessage());
     exit(); 
 }catch(\Throwable $e){
+    echo "Throwable Excenption Catched:";
     var_dump($e->getMessage());
     exit(); 
 }
