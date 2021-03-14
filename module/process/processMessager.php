@@ -8,6 +8,10 @@ namespace module\process;
 use module\exception\ServerException;
 class ProcessMessager{
 
+    //channel types
+    const EMAIL_CHANNEL_SEND_MSG = 1;
+    const DISPATCHER_EMAIL_RECEIVED = 2;
+
     private $_queue = null;
     
     public function __construct()
@@ -36,6 +40,13 @@ class ProcessMessager{
         if($rec) return $msg;
 
         return null;
+    }
+
+    public static function getAllDispatcherTypes()
+    {
+        return [
+            self::DISPATCHER_EMAIL_RECEIVED,
+        ];
     }
     
     /*

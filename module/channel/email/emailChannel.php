@@ -10,10 +10,6 @@ use module\channel\email\pop3Mailer\PopException;
 use module\exception\ServerException;
 
 class EmailChannel extends BaseChannel {
-    /*
-     * type for message queue
-     */
-    const MESSAGE_TYPE = 1;
 
     /*
      * refresh interval for new mail though pop3
@@ -21,6 +17,7 @@ class EmailChannel extends BaseChannel {
     const REFRESH_INTERVAL = 120;//seconds
 
     const RUNTIME_PATH = BASE_DIR."/runtime";
+    const UNREAD_PATH = self::RUNTIME_PATH.Mailer::MAILER_PATH."/unreads/";
 
     private ?ProcessMessager $processMessager = null;
     private ?Mailer $mailer = null;
@@ -49,6 +46,7 @@ class EmailChannel extends BaseChannel {
         while(true){
             $this->checkMessageQueue();
             $this->checkUnreadEmail();
+            $this->notifyUnreadToDispatcher();
             sleep(self::REFRESH_INTERVAL);
         }
     }
@@ -56,7 +54,7 @@ class EmailChannel extends BaseChannel {
     public function checkMessageQueue():void
     {
         l("email channel: checking message queue...");
-        $msg = $this->processMessager->receive(self::MESSAGE_TYPE);
+        $msg = $this->processMessager->receive(ProcessMessager::EMAIL_CHANNEL_SEND_MSG);
         //if($msg) var_dump($msg);
     }
 
@@ -82,9 +80,35 @@ class EmailChannel extends BaseChannel {
         }
     }
 
+    public static function loadUnreadFileToMessageEntity(string $filename):?BbMessageEntity
+    {
+        $saveUnreadPath = self::UNREAD_PATH;
+        if(!is_file($saveUnreadPath.$filename)) return null;
+        $content = json_decode(file_get_contents($saveUnreadPath.$filename), true);
+        if(!$content) return null;
+        $entity = new BbMessageEntity(null);
+        $data               = [
+            'mailIndex'     => $content['id'],
+            'mailFrom'      => [$content['from']],
+            'mailReplyTo'   => empty($content['reply_to'])? [] : [$content['reply_to']],
+            'mailCcTo'      => empty($content['cc'])? [] : [$content['cc']],
+            'mailBccTo'     => empty($content['bcc'])? [] : [$content['bcc']],
+            'mailTo'        => [$content['to']],
+            'group'         => [],
+            'subject'       => $content['subject']??'无标题',
+            'time'          => empty($content['date'])? 0 : strtotime($content['date']),
+            'contain'       => $content['text_content']??'',
+            'containHtml'   => $content['html_content']??'',
+            'attachmentNum' => 0,
+            'attachments'   => [],
+        ];
+        $entity->unserialize(json_encode($data));
+        return $entity;
+    }
+
     private function saveUnreadEmail(?array $parsedMails):bool
     {
-        $saveUnreadPath = self::RUNTIME_PATH.Mailer::MAILER_PATH."/unreads/";
+        $saveUnreadPath = self::UNREAD_PATH;
         if(!is_dir($saveUnreadPath)) mkdir($saveUnreadPath, 0777, true);
         if(empty($parsedMails)) return false;
 
@@ -103,5 +127,19 @@ class EmailChannel extends BaseChannel {
             file_put_contents($saveUnreadPath.$id."_unread.json", $str);
         }
         return true;
+    }
+
+    private function notifyUnreadToDispatcher()
+    {
+        $saveUnreadPath = self::UNREAD_PATH;
+        if(!is_dir($saveUnreadPath)) return;
+        $files = scandir($saveUnreadPath);
+        $newMails = [];
+        foreach($files as $file){
+            if(substr($file, -4, 4) == 'json') $newMails[] = $file; 
+        }
+        if(empty($newMails)) return;
+        debug("notify to dispatcher:".json_encode($newMails));
+        $this->processMessager->send(ProcessMessager::DISPATCHER_EMAIL_RECEIVED, json_encode($newMails));
     }
 }

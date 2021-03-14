@@ -66,4 +66,44 @@ class ClientEntity {
 
         return true;
     }
+
+    /*
+     * send message to blackberry client.
+     */
+    public function sendToBb(BbMessageEntity $messageEntity):bool
+    {
+        $outPackage = "";
+        $this->writeByte($outPackage, 0);//msg head
+        $this->writeByte($outPackage, 4);
+        $this->writeInt($outPackage, 1);
+        $this->writeStringArray($outPackage, $messageEntity->mailFrom);//from
+        $this->writeStringArray($outPackage, $messageEntity->mailReplyTo??[]);//reply to
+        $this->writeStringArray($outPackage, $messageEntity->mailCcTo??[]);//cc
+        $this->writeStringArray($outPackage, $messageEntity->mailBccTo??[]);//bcc
+        $this->writeStringArray($outPackage, $messageEntity->mailTo);//to
+        $this->writeStringArray($outPackage, $messageEntity->group??[]);//group
+
+        $this->writeString($outPackage, $messageEntity->subject);
+        $this->writeLong($outPackage, ceil(microtime(true)*1000));
+
+        $this->writeInt($outPackage, 0);
+
+        $this->writeString($outPackage, $messageEntity->xMailName);
+        $this->writeString($outPackage, $messageEntity->contain);
+        $this->writeString($outPackage, $messageEntity->containHtml);
+
+        $this->writeInt($outPackage, 0);//attachments num
+        $this->writeBool($outPackage, false);//has location
+
+        $this->writeString($outPackage, 'text/plain');//contain html type
+        $this->writeString($outPackage, config("server.email_username"));//own account
+        $this->writeString($outPackage, $messageEntity->id??'id');//message id
+        $this->writeString($outPackage, '');//in reply to
+        $this->writeString($outPackage, '');//reference id
+
+        $this->addPackageToBuffer($outPackage);
+        $this->sendToClient();
+        debug("send emailentity to bb...".json_encode($messageEntity));
+        return true;
+    }
 }

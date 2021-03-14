@@ -105,6 +105,8 @@ class Mailer {
         if(empty($id) || empty($parsedMail)) return null;
         $result            = [
             "id"           => $id,
+            "subject"      => $parsedMail->getHeaderValue(HeaderConsts::SUBJECT),
+            "date"         => $parsedMail->getHeaderValue(HeaderConsts::DATE),
             "from"         => $parsedMail->getHeaderValue(HeaderConsts::FROM),
             "to"           => $parsedMail->getHeaderValue(HeaderConsts::TO),
             "cc"           => $parsedMail->getHeaderValue(HeaderConsts::CC),

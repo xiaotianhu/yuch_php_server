@@ -8,29 +8,28 @@ use module\server\PackageEntity;
 use Serializable;
 class BbMessageEntity implements Serializable {
     
-    private ?ClientEntity $client;
     private ?PackageEntity $package; 
 
-    public $version       = null;
-    public $mailIndex     = null;
-    public $mailFrom      = null;
-    public $mailReplyTo   = null;
-    public $mailCcTo      = null;
-    public $mailBccTo     = null;
-    public $mailTo        = null;
-    public $group         = null;
-    public $subject       = null;
-    public $time          = null;
-    public $flags         = null;
-    public $xMailName     = null;
-    public $contain       = null;
-    public $containHtml   = null;
-    public $attachmentNum = null;
-    public $attachments   = [];
+    public ?string $id          = null;
+    public ?string $version     = null;
+    public ?int $mailIndex      = null;
+    public ?array $mailFrom     = null;
+    public ?array $mailReplyTo  = null;
+    public ?array $mailCcTo     = null;
+    public ?array $mailBccTo    = null;
+    public ?array $mailTo       = null;
+    public ?array $group        = null;
+    public ?string $subject     = null;
+    public ?int $time           = null;
+    public ?int $flags          = null;
+    public ?string $xMailName   = null;
+    public ?string $contain     = null;
+    public ?string $containHtml = null;
+    public ?int $attachmentNum  = null;
+    public ?array $attachments  = [];
 
-    public function __construct(ClientEntity $client, PackageEntity $package)
+    public function __construct(?PackageEntity $package)
     {
-        $this->client = $client;
         $this->package = $package; 
     }
 
@@ -80,22 +79,22 @@ class BbMessageEntity implements Serializable {
     public function unserialize($data)
     {
         $d                   = json_decode($data, true);
-        $this->version       = $d['version'];
-        $this->mailIndex     = $d['mailIndex'];
-        $this->mailFrom      = $d['mailFrom'];
-        $this->mailReplyTo   = $d['mailReplyTo'];
-        $this->mailCcTo      = $d['mailCcTo'];
-        $this->mailBccTo     = $d['mailBccTo'];
-        $this->mailTo        = $d['mailTo'];
-        $this->group         = $d['group'];
-        $this->subject       = $d['subject'];
-        $this->time          = $d['time'];
-        $this->flags         = $d['flags'];
-        $this->xMailName     = $d['xMailName'];
-        $this->contain       = $d['contain'];
-        $this->containHtml   = $d['containHtml'];
-        $this->attachmentNum = $d['attachmentNum'];
-        $this->attachments   = $d['attachments'];
+        $this->version       = $d['version']??'';
+        $this->mailIndex     = $d['mailIndex']??0;
+        $this->mailFrom      = $d['mailFrom']??[];
+        $this->mailReplyTo   = $d['mailReplyTo']??[];
+        $this->mailCcTo      = $d['mailCcTo']??[];
+        $this->mailBccTo     = $d['mailBccTo']??[];
+        $this->mailTo        = $d['mailTo']??[];
+        $this->group         = $d['group']??[];
+        $this->subject       = $d['subject']??"";
+        $this->time          = $d['time']??0;
+        $this->flags         = $d['flags']??0;
+        $this->xMailName     = $d['xMailName']??"";
+        $this->contain       = $d['contain']??"";
+        $this->containHtml   = $d['containHtml']??"";
+        $this->attachmentNum = $d['attachmentNum']??0;
+        $this->attachments   = $d['attachments']??[];
         return $this;
     }
 }

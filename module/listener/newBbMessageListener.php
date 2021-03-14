@@ -15,7 +15,7 @@ class NewBbMessageListener extends AbstractListener{
         $emailEntity = new BbMessageEntity($client, $package);
         $emailEntity->parseFromPackage();
 
-        l("received email....");
+        debug("received email from bb....");
         $this->channelManager = app()->channelManager;
         $this->channelManager->sendByChannel($emailEntity);
     }

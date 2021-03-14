@@ -12,14 +12,14 @@ class PackageEntity {
         $this->data = $data;
     }
 
-    public function readByte()
+    public function readByte():?string
     {
         $b = $this->slice($this->data, 1);
-        if(isset($b[0])) return $b[0];
+        if(isset($b[0])) return (string)$b[0];
         return null;
     }
 
-    public function readInt():int
+    public function readInt():?int
     {
         return $this->parseInt($this->slice($this->data, 4));
     }

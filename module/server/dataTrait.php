@@ -8,8 +8,9 @@ trait DataTrait{
     /*
      * @var Resource of socket connection
      */
-    private $socket = null;
+    private $socket          = null;
     private $unhandlePackage = [];
+    private $unsendPackage   = [];
 
     
     public function receivePackage():PackageEntity
@@ -113,6 +114,94 @@ trait DataTrait{
             $this->unhandlePackage[] = new PackageEntity($npackage);
         }
         return (new PackageEntity($package));
+    }
+
+    public function writeByte(&$outPackage, int $ascii){
+        $outPackage .= chr($ascii);
+    }
+
+    public function writeInt(&$outPackage, int $int){
+        $outPackage .= pack("V*", $int);
+    }
+
+    public function writeLong(&$outPackage, $long){
+        $outPackage .= pack("P*", $long);
+    }
+
+    public function writeBool(&$outPackage, $bool){
+        if($bool) {
+            $outPackage .= chr(1);
+        }else{
+            $outPackage .= chr(0);
+        }
+    }
+
+    public function writeString(&$outPackage, string $str){
+        if(empty($str) || strlen($str) == 0){
+            return $this->writeInt($outPackage, 0);
+        }
+        $str    = str_replace('\0', '', $str);
+        $strLen = strlen($str);
+        $this->writeInt($outPackage, $strLen);
+        $outPackage .= $str;
+    }
+
+    public function writeStringArray(&$outPackage, array $strArray){
+        $len = count($strArray);
+        $this->writeInt($outPackage, $len);
+        foreach($strArray as $v){
+            $this->writeString($outPackage, $v);
+        }
+    }
+
+    public function addPackageToBuffer($package){
+        $this->unsendPackage[] = $package;
+    }
+
+    public function sendToClient(){
+        $sendBuffer    = $this->packPackage();
+        $zipSendBuffer = zlib_encode($sendBuffer, ZLIB_ENCODING_GZIP);
+
+        if(strlen($zipSendBuffer) > strlen($sendBuffer)){
+            $header = (strlen($sendBuffer)<<16) & 0xffff0000;
+            $outBuf = "";
+            $this->writeInt($outBuf, $header);
+            $sendBuffer = $outBuf.$sendBuffer;
+            $length = strlen($sendBuffer);
+        }else{
+            //send gzip data
+            $header = ((strlen($sendBuffer)<<16) & 0xffff0000)|strlen($zipSendBuffer);
+            $outBuf = "";
+            $this->writeInt($outBuf, $header);
+            $sendBuffer = $outBuf.$zipSendBuffer;
+            $length = strlen($sendBuffer);
+            debug("send zip. orglen:".strlen($sendBuffer)."ziplen:".strlen($zipSendBuffer));
+        }
+        $sentLen = socket_write($this->socket, $sendBuffer);
+
+        //for test use
+        if(getenv("DEBUG")){
+            $test = [];
+            foreach(str_split($sendBuffer) as $v){
+                $test[] = ord($v);
+            }
+        }
+        debug("unsend buffer length：  $length \r\n");
+        debug("send to bb:  $sentLen \r\n");
+
+        return $this;
+    }
+    private function packPackage(){
+        if(empty($this->unsendPackage)) return null;
+        $sendBuffer = "";
+        foreach($this->unsendPackage as $p){
+            $len = strlen($p);
+            $sendBuffer .= pack("V*", $len);
+            $sendBuffer .= $p;
+        }
+        $this->sendBuffer = [];
+        $this->unsendPackage = [];
+        return $sendBuffer;
     }
 }
 
