@@ -50,7 +50,7 @@ class ChannelManager {
      */
     private function selectChannelType(BbMessageEntity $msg):int
     {
-        return EmailChannel::MESSAGE_TYPE;
+       return ProcessMessager::EMAIL_CHANNEL_SEND_MSG;
     }
 }
     

@@ -25,6 +25,7 @@ class ProcessMessager{
 
     public function send(int $type, string $message):void
     {
+        debug("push message into msg_queue msg:$message \r\n type:{$type}");
         $s = msg_send($this->_queue, $type, $message, false);
         if(!$s) throw new ServerException("send message with ProcessMessageService failed.");
     }
@@ -37,8 +38,11 @@ class ProcessMessager{
         $msg = null;
         $msgType = null;
         $rec = msg_receive($this->_queue, $type, $msgType, 65535, $msg, false, MSG_IPC_NOWAIT);
-        if($rec) return $msg;
 
+        if($rec) {
+            debug("received message from msg_queue msg:$msg \r\n type:{$type}");
+            return $msg;
+        }
         return null;
     }
 

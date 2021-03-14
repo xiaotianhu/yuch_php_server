@@ -18,14 +18,16 @@ class Dispatcher {
         while(true){
             debug("wait for new package...");
             $package = $client->receivePackage(); 
+            if(!$package) continue;
+
             $this->onPackage($client, $package);
             $client->isTimeout();
-            //$this->checkMessageQueue($client);
+            $this->checkMessageQueue($client);
             sleep(self::RECV_SLEEP_TIME);
         }
     }
 
-    public function onPackage(ClientEntity $client, PackageEntity $package)
+    public function onPackage(ClientEntity $client, ?PackageEntity $package)
     {
         $packageHead = $package->readByte(); 
         switch($packageHead){

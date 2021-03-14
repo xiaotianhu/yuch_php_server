@@ -13,13 +13,30 @@ trait DataTrait{
     private $unsendPackage   = [];
 
     
-    public function receivePackage():PackageEntity
+    public function receivePackage():?PackageEntity
     {
         if(!empty($this->unhandlePackage)){
-            return array_unshift($this->unhandlePackage);
+            $p = array_shift($this->unhandlePackage);
+            if(!$p instanceof PackageEntity){
+
+                echo "unhandlePackage not instanceof packageEntity.";
+                var_dump($p);
+
+                return null;
+            }
+            return $p;
         }
 
-        $int = $this->parseInt($this->socketRead(4));
+        try{
+            $d   = $this->socketRead(4);
+            $int = $this->parseInt($d);
+
+            echo "socket read4 for parseint";
+            var_dump($d);
+        }catch(ClientException $e){
+            l("socket parse int failed.dumping socket data:");
+            return null;
+        }
         if($int < 0) throw new ClientException("read int err.");
 
         $zipLen = 0;
@@ -39,6 +56,9 @@ trait DataTrait{
             l("zip data received. zipLen: $zipLen orglen: $orgLen");
             $zipData = $this->socketRead($zipLen);
             $data    = $this->unzipDataArray($zipData);
+            
+            echo 'unziped data:\r\n';
+            var_dump($data);
         }
         return $this->parsePackage($data);
     }
@@ -75,8 +95,15 @@ trait DataTrait{
 
     public function parseInt($buffer=null):int
     {
-        if(empty($buffer) || count($buffer) != 4){
+        if(empty($buffer)){
             throw new ClientException("err parse Int,empty buf or buf length != 4.".json_encode($buffer));
+        }
+        if(count($buffer) != 4){
+            l("parse int wrong, buffer not full...");var_dump($buffer);
+            if(empty($buffer[3])) $buffer[3] = 0;
+            if(empty($buffer[2])) $buffer[2] = 0;
+            if(empty($buffer[1])) $buffer[1] = 0;
+            if(empty($buffer[0])) $buffer[0] = 0;
         }
 
         $r = $buffer[0] | ($buffer[1] << 8) | ($buffer[2]  << 16) | ($buffer[3] << 24);

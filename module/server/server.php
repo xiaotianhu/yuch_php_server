@@ -46,7 +46,9 @@ class Server{
                 }
             }
         }catch(\Throwable $e){
-            l($e);
+            l($e->getMessage());
+            l($e->getFile());
+            l($e->getLine());
         }
     }
 

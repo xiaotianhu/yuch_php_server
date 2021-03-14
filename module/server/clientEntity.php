@@ -6,9 +6,10 @@ use module\exception\ClientException;
 use module\event\SendToBbEvent;
 class ClientEntity {
     use DataTrait;
-    const HEAD_CONFIRM   = 2;
-    const HEAD_HEARTBEAT = 7;
-    const HEAD_MAIL      = 0;
+    const HEAD_CONFIRM    = 2;
+    const HEAD_HEARTBEAT  = 7;
+    const HEAD_MSGCONFIRM = 8;
+    const HEAD_MAIL       = 0;
 
     const TIMEOUT_SEC = 300;//5minutes timeout if no heartbeat reveived.
     

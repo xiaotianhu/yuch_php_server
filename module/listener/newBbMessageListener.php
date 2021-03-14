@@ -12,7 +12,7 @@ class NewBbMessageListener extends AbstractListener{
     {
         $package     = $event->package;
         $client      = $event->client;
-        $emailEntity = new BbMessageEntity($client, $package);
+        $emailEntity = new BbMessageEntity($package);
         $emailEntity->parseFromPackage();
 
         debug("received email from bb....");
