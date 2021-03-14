@@ -2,13 +2,14 @@
 declare(strict_types=1);
 namespace module\channel\email\pop3Mailer;
 use ZBateson\MailMimeParser\MailMimeParser;
-use ZBateson\MailMimeParser\Message;
 use ZBateson\MailMimeParser\Header\HeaderConsts;
 
 class Mailer {
     private ?string $runtimePath = null; 
     private ?PopMailer $popMailer = null;
     private ?int $maxUnread = null;
+
+    const MAILER_PATH = "/mailer";
 
     //private $smtpMailer = null;
     /*
@@ -43,7 +44,7 @@ class Mailer {
         if(!is_dir($this->runtimePath)) {
             throw new MailerException("runtime path {$this->runtimePath} not exist.");
         }
-        $this->runtimePath = $this->runtimePath."/"."mailer";
+        $this->runtimePath = $this->runtimePath.self::MAILER_PATH;
         if(!is_dir($this->runtimePath)){
             mkdir($this->runtimePath);
         }
@@ -76,6 +77,10 @@ class Mailer {
             "list"          => array_slice($listId, -($this->maxUnread), $this->maxUnread),
         ];
         file_put_contents($unreadCacheFile, json_encode($cache));
+        debug("latest mail id is: ".array_pop($listId));
+        
+        //list only refresh on next connetion.
+        $this->popMailer->reconnect();
         return $unreadList;
     }
 
@@ -83,21 +88,23 @@ class Mailer {
      * download unread emails from server,parse and store in the runtime path
      * @param $ids array of unread email ids eg:[1,2,3 ...]
      */
-    public function retrieveUnreads(array $ids)
+    public function retrieveUnreads(array $ids):?array
     {
         $parsedMails = [];
         foreach($ids as $id)
         {
-            if($id != 381) continue;
             $mailOrigin    = $this->popMailer->getMail($id, 65535);
             $parser        = new MailMimeParser();
             $parsedMail    = $parser->parse($mailOrigin);
-            $parsedMails[] = $this->parseMailToArray($parsedMail);
+            $parsedMails[] = $this->parseMailToArray(intval($id), $parsedMail);
         }
+        return $parsedMails;
     }
-    private function parseMailToArray($parsedMail)
+    private function parseMailToArray(int $id, $parsedMail):?array
     {
+        if(empty($id) || empty($parsedMail)) return null;
         $result            = [
+            "id"           => $id,
             "from"         => $parsedMail->getHeaderValue(HeaderConsts::FROM),
             "to"           => $parsedMail->getHeaderValue(HeaderConsts::TO),
             "cc"           => $parsedMail->getHeaderValue(HeaderConsts::CC),
@@ -120,7 +127,9 @@ class Mailer {
                     '__unknown_file_name_' . $key
                 )
             );
-            $result["attachments"][$filename] = $attachment->getContent();
+            if(!is_dir("/tmp/mailer/{$id}")) mkdir("/tmp/mailer/{$id}", 0777, true);
+            $attachment->saveContent("/tmp/mailer/{$id}/{$filename}");
+            $result['attachments'][$filename] = "/tmp/mailer/{$id}/{$filename}";
         }
         return $result;
     }

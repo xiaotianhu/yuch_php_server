@@ -16,5 +16,5 @@ return
     "smtp_port"        => "465",
     "email_encrypt"    => "tls",
     "email_max_unread" => "20",
-    "check_interval"   => "300",//pop3 check interval in seconds
+    "check_interval"   => "30",//pop3 check interval in seconds
 ];

@@ -58,6 +58,11 @@ function l($log)
     file_put_contents($logDir.$logFile, $log, FILE_APPEND);
 }
 
+function debug($log)
+{
+    if(getenv("DEBUG")) l($log);
+}
+
 function loadDir(string $dir, bool $recursive=false)
 {
     if(!is_dir($dir)) throw new \Exception($dir."not exist.");
