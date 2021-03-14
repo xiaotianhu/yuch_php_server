@@ -32,7 +32,7 @@ class DispatcherMessageQueueListener extends AbstractListener{
             try{
                 $entity = EmailChannel::loadUnreadFileToMessageEntity($file);
                 if(empty($entity)) continue;
-                $this->event->clientEntity->sendToBb($entity);
+                $r = $this->event->clientEntity->sendToBb($entity);
             }catch(\Throwable $e){
                 l($e->getMessage());
                 l($e->getFile());

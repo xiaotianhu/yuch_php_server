@@ -2,9 +2,7 @@
 declare(strict_types=1);
 namespace module\server;
 
-use module\server\ClientEntity;
 use module\server\PackageEntity;
-//use module\exception\ClientException;
 use Serializable;
 class BbMessageEntity implements Serializable {
     
@@ -27,6 +25,8 @@ class BbMessageEntity implements Serializable {
     public ?string $containHtml = null;
     public ?int $attachmentNum  = null;
     public ?array $attachments  = [];
+
+    public ?string $filename = "";
 
     public function __construct(?PackageEntity $package)
     {
@@ -72,6 +72,7 @@ class BbMessageEntity implements Serializable {
             'containHtml'   => $this->containHtml,
             'attachmentNum' => $this->attachmentNum,
             'attachments'   => $this->attachments, 
+            'filename'      => $this->filename,
         ];
         return json_encode($d);
     }
@@ -95,6 +96,7 @@ class BbMessageEntity implements Serializable {
         $this->containHtml   = $d['containHtml']??"";
         $this->attachmentNum = $d['attachmentNum']??0;
         $this->attachments   = $d['attachments']??[];
+        $this->filename      = $d['filename']??'';
         return $this;
     }
 }

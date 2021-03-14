@@ -101,9 +101,24 @@ class EmailChannel extends BaseChannel {
             'containHtml'   => $content['html_content']??'',
             'attachmentNum' => 0,
             'attachments'   => [],
+            'filename'      => $content['filename']??'',
         ];
         $entity->unserialize(json_encode($data));
         return $entity;
+    }
+
+    public static function removeSavedEmail(string $filename):bool
+    {
+        $saveUnreadPath = self::UNREAD_PATH;
+        if(!is_file($saveUnreadPath.$filename)) return false;
+        $ex = explode("_", $filename);
+        if(empty($ex[0])) return false;
+        if(!unlink($saveUnreadPath.$filename)) return false;
+        $id = $ex[0];
+        if(is_dir($saveUnreadPath."/".$id)){
+            if(!unlink($saveUnreadPath."/".$id)) return false;
+        }
+        return true;
     }
 
     private function saveUnreadEmail(?array $parsedMails):bool
@@ -123,8 +138,10 @@ class EmailChannel extends BaseChannel {
                     debug("saved email's attachment :".$saveUnreadPath.$id."/".$f);
                 }
             }
+            $filename = $id."_unread.json";
+            $tmpArr['filename'] = $filename;
             $str = json_encode($tmpArr);
-            file_put_contents($saveUnreadPath.$id."_unread.json", $str);
+            file_put_contents($saveUnreadPath.$filename, $str);
         }
         return true;
     }

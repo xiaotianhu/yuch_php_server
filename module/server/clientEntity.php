@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace module\server;
 
 use module\exception\ClientException;
+use module\event\SendToBbEvent;
 class ClientEntity {
     use DataTrait;
     const HEAD_CONFIRM   = 2;
@@ -104,6 +105,7 @@ class ClientEntity {
         $this->addPackageToBuffer($outPackage);
         $this->sendToClient();
         debug("send emailentity to bb...".json_encode($messageEntity));
+        event(new SendToBbEvent($this, $messageEntity));
         return true;
     }
 }
