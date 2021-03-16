@@ -17,25 +17,15 @@ trait DataTrait{
     {
         if(!empty($this->unhandlePackage)){
             $p = array_shift($this->unhandlePackage);
-            if(!$p instanceof PackageEntity){
-
-                echo "unhandlePackage not instanceof packageEntity.";
-                var_dump($p);
-
-                return null;
-            }
             return $p;
         }
 
         try{
             $d   = $this->socketRead(4);
             $int = $this->parseInt($d);
-
-            echo "socket read4 for parseint";
-            var_dump($d);
         }catch(ClientException $e){
             l("socket parse int failed.dumping socket data:");
-            return null;
+            throw new ClientException("parse package head int failed.");
         }
         if($int < 0) throw new ClientException("read int err.");
 
@@ -56,9 +46,6 @@ trait DataTrait{
             l("zip data received. zipLen: $zipLen orglen: $orgLen");
             $zipData = $this->socketRead($zipLen);
             $data    = $this->unzipDataArray($zipData);
-            
-            echo 'unziped data:\r\n';
-            var_dump($data);
         }
         return $this->parsePackage($data);
     }
@@ -79,6 +66,7 @@ trait DataTrait{
             if(!$res) return [];
             
             $r = ord($d);
+            l("socketRead-read origin: {$d}  ord: {$r}");
             $data[] = $r;
         }
         return $data;
@@ -125,19 +113,20 @@ trait DataTrait{
 
     private function parsePackage($data):?PackageEntity
     {
+        l("begin parse package data:");var_dump($data);
         if(!$data) return null;
         $dataLen = count($data);
         if(empty($data) || $dataLen == 0 || !$data) {
             l("parse empty package, return null;\r\n");
             return null;
         }
-        $tlen    = $this->parseInt($this->slice($data, 4));
+        $tlen    = $this->parseInt($this->slice($data, 4));//包体长
         $package = $this->slice($data, $tlen);
-        $tlen += 4;
+        $tlen += 4;//包体长+包头4位 跳过当前这个包 到下一个包
         while($tlen < $dataLen){
             $ntlen = $this->parseInt($this->slice($data, 4));
             $npackage = $this->slice($data, $ntlen);
-            $tlen += 4;
+            $tlen += $ntlen+4;
             $this->unhandlePackage[] = new PackageEntity($npackage);
         }
         return (new PackageEntity($package));
