@@ -28,7 +28,7 @@ class BbMessageEntity implements Serializable {
 
     public ?string $filename = "";
 
-    public function __construct(?PackageEntity $package)
+    public function __construct(?PackageEntity $package=null)
     {
         $this->package = $package; 
     }
@@ -98,5 +98,22 @@ class BbMessageEntity implements Serializable {
         $this->attachments   = $d['attachments']??[];
         $this->filename      = $d['filename']??'';
         return $this;
+    }
+
+    /*
+     * origin mail to will be like:  ["Username <user@gmail.com>"]
+     * @return array $emails  eg:["user@gmail.com", "user1@gmail.com"]
+     */
+    public function getMailToEmail():?array
+    {
+        if(empty($this->mailTo)) return null;
+        $r = [];
+        foreach($this->mailTo as $ms){
+            $mail = "";
+            preg_match("/<(.*)>/iU", $ms, $mail); 
+            if(empty($mail) || empty($mail[1])) continue;
+            $r[] = $mail[1]; 
+        }
+        return $r;
     }
 }

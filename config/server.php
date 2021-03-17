@@ -17,4 +17,6 @@ return
     "email_encrypt"    => "tls",
     "email_max_unread" => "20",
     "check_interval"   => "30",//pop3 check interval in seconds
+
+    "flomo_api" => "https://flomoapp.com/xxoo",
 ];

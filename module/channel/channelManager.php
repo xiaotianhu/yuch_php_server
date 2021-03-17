@@ -2,9 +2,11 @@
 declare(strict_types=1);
 namespace module\channel;
 
+use module\exception\ClientException;
 use module\server\BbMessageEntity;
 use module\process\ProcessMessager;
 use module\channel\email\EmailChannel;
+use module\channel\flomo\FlomoChannel;
 class ChannelManager {
 
     private ?ProcessMessager $processMessager = null;
@@ -16,19 +18,38 @@ class ChannelManager {
 
         $channels = [
             EmailChannel::class,
+            FlomoChannel::class,
         ];
         $this->initAllChannel($channels);
     }
 
     public function sendByChannel(BbMessageEntity $bbMessageEntity)
     {
-        l("channelmanager:send by channel....".serialize($bbMessageEntity));
+        $file = self::cacheEntity($bbMessageEntity);
+        $type = $this->selectChannelType($bbMessageEntity);
+        $this->processMessager->send($type, $file); 
+    }
+
+    /*
+     * @return $file full path of cached file
+     */
+    public static function cacheEntity(BbMessageEntity $bbMessageEntity):string
+    {
+        l("channelmanager:cache by channel....".serialize($bbMessageEntity));
         $dir = BASE_DIR."/runtime/message/";
         if(!is_dir($dir)) mkdir($dir);
         $file = intval(microtime(true)).".json";
         file_put_contents($dir.$file, serialize($bbMessageEntity));
-        $type = $this->selectChannelType($bbMessageEntity);
-        $this->processMessager->send($type, $dir.$file); 
+        return $dir.$file;
+    }
+
+    public static function getCachedEntity(string $file):?BbMessageEntity
+    {
+        if(!is_file($file)) return null;
+        $fileContent = file_get_contents($file);
+        l("get cached entity \r\n\r\n");
+        $entity = unserialize($fileContent);
+        return $entity;
     }
 
     private function initAllChannel(array $channels)
@@ -50,7 +71,20 @@ class ChannelManager {
      */
     private function selectChannelType(BbMessageEntity $msg):int
     {
-       return ProcessMessager::EMAIL_CHANNEL_SEND_MSG;
+        $channels = config("channel");
+        
+        if(empty($msg->getMailToEmail())){
+            throw new ClientException("mail to user not found.");
+        }
+        $toMails = $msg->getMailToEmail();
+        $toUser = array_shift($toMails);
+        $ch = null;
+        foreach($channels as $channel => $emails){
+            if($ch === null) $ch = $channel;//first will be default;
+            if(in_array($toUser, $emails)) $ch = $channel;
+        }
+        debug("selected channel is: {$ch}");
+        return $ch;
     }
 }
     

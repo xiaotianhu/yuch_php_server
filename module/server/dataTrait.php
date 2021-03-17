@@ -66,7 +66,7 @@ trait DataTrait{
             if(!$res) return [];
             
             $r = ord($d);
-            l("socketRead-read origin: {$d}  ord: {$r}");
+            //debug("socketRead-read origin: {$d}  ord: {$r}");
             $data[] = $r;
         }
         return $data;
@@ -85,13 +85,6 @@ trait DataTrait{
     {
         if(empty($buffer)){
             throw new ClientException("err parse Int,empty buf or buf length != 4.".json_encode($buffer));
-        }
-        if(count($buffer) != 4){
-            l("parse int wrong, buffer not full...");var_dump($buffer);
-            if(empty($buffer[3])) $buffer[3] = 0;
-            if(empty($buffer[2])) $buffer[2] = 0;
-            if(empty($buffer[1])) $buffer[1] = 0;
-            if(empty($buffer[0])) $buffer[0] = 0;
         }
 
         $r = $buffer[0] | ($buffer[1] << 8) | ($buffer[2]  << 16) | ($buffer[3] << 24);
@@ -113,7 +106,7 @@ trait DataTrait{
 
     private function parsePackage($data):?PackageEntity
     {
-        l("begin parse package data:");var_dump($data);
+        //l("begin parse package data:");var_dump($data);
         if(!$data) return null;
         $dataLen = count($data);
         if(empty($data) || $dataLen == 0 || !$data) {
@@ -203,7 +196,7 @@ trait DataTrait{
             }
         }
         debug("unsend buffer length：  $length \r\n");
-        debug("send to bb:  $sentLen \r\n");
+        debug("send to bb length:  $sentLen \r\n");
 
         return $this;
     }

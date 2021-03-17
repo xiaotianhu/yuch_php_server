@@ -9,8 +9,9 @@ use module\exception\ServerException;
 class ProcessMessager{
 
     //channel types
-    const EMAIL_CHANNEL_SEND_MSG = 1;
+    const EMAIL_CHANNEL_SEND_MSG    = 1;
     const DISPATCHER_EMAIL_RECEIVED = 2;
+    const FLOMO_CHANNEL_SEND_MSG    = 3;
 
     private $_queue = null;
     

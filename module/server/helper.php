@@ -78,3 +78,25 @@ function loadDir(string $dir, bool $recursive=false)
         }
     }
 }
+
+function curl($url, $params=[], $header=[]) {
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    if (!empty($params)) {
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
+    }
+    if (!empty($header)) curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    curl_setopt($ch,CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+    curl_setopt($ch, CURLOPT_DNS_USE_GLOBAL_CACHE, FALSE);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $result = curl_exec($ch);
+    if ($result === false) $result = curl_errno($ch);
+
+    curl_close($ch);
+    return $result;
+}
+
