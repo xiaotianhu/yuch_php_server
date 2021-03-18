@@ -5,7 +5,7 @@ namespace module\channel\email;
 use module\channel\BaseChannel;
 use module\server\BbMessageEntity;
 use module\process\ProcessMessager;
-use module\channel\email\pop3Mailer\mailer;
+use module\channel\email\pop3Mailer\Mailer;
 use module\channel\email\pop3Mailer\PopException;
 use module\exception\ServerException;
 
