@@ -145,7 +145,7 @@ trait DataTrait{
         }
     }
 
-    public function writeString(&$outPackage, string $str){
+    public function writeString(&$outPackage, ?string $str=""){
         if(empty($str) || strlen($str) == 0){
             return $this->writeInt($outPackage, 0);
         }
